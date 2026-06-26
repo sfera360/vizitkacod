@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SFERA — Виртуальные туры 360° и промышленная фотография</title>
+<style>
+/* ============================
+   ТОКЕНЫ
+   ============================ */
+:root {
+  --bg:         #0B0C10;
+  --bg-card:    #111318;
+  --bg-card2:   #161923;
+  --white:      #FFFFFF;
+  --slate:      #94A3B8;
+  --muted:      #4A5568;
+  --accent:     #00E5FF;
+  --accent-dim: rgba(0,229,255,.12);
+  --accent-glow:rgba(0,229,255,.35);
+  --accent2:    #0066FF;
+  --border:     rgba(255,255,255,.07);
+  --border-a:   rgba(0,229,255,.3);
+  --r:          12px;
+  --rL:         20px;
+  --tr:         .35s cubic-bezier(.4,0,.2,1);
+  --font-h:     'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-b:     'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+/* ============================
+   RESET
+   ============================ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;font-size:16px}
+body{
+  background:var(--bg);
+  color:var(--white);
+  font-family:var(--font-b);
+  line-height:1.65;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--accent);border-radius:2px}
+a{text-decoration:none;color:inherit}
+img{max-width:100%;display:block}
+
+/* ============================
+   УТИЛИТЫ
+   ============================ */
+.wrap{max-width:1260px;margin:0 auto;padding:0 2rem}
+.lbl{
+  display:inline-block;
+  font-size:.7rem;font-weight:700;
+  letter-spacing:.2em;text-transform:uppercase;
+  color:var(--accent);margin-bottom:.85rem;
+}
+.h2{
+  font-size:clamp(1.75rem,3vw,2.75rem);
+  font-weight:800;line-height:1.1;
+  letter-spacing:-.025em;
+}
+.desc{
+  font-size:1rem;color:var(--slate);
+  max-width:540px;margin-top:.75rem;line-height:1.75;
+}
+.divider{
+  width:100%;height:1px;
+  background:linear-gradient(90deg,transparent,var(--border),transparent);
+}
+
+/* ============================
+   КНОПКИ
+   ============================ */
+.btn{
+  display:inline-flex;align-items:center;gap:.5rem;
+  padding:.875rem 2rem;
+  font-size:.9rem;font-weight:700;letter-spacing:.04em;
+  border-radius:var(--r);cursor:pointer;
+  transition:var(--tr);border:none;
+  position:relative;overflow:hidden;
+}
+.btn-primary{background:var(--accent);color:#000}
+.btn-primary:hover{
+  box-shadow:0 0 30px var(--accent-glow),0 0 60px rgba(0,229,255,.12);
+  transform:translateY(-2px);
+}
+.btn-outline{
+  background:transparent;color:var(--white);
+  border:1.5px solid var(--border);
+}
+.btn-outline:hover{
+  border-color:var(--accent);color:var(--accent);
+  box-shadow:0 0 20px rgba(0,229,255,.1);
+  transform:translateY(-2px);
+}
+.btn-ghost{
+  background:transparent;color:var(--accent);
+  border:1px solid var(--border-a);
+  padding:.6rem 1.4rem;font-size:.85rem;
+}
+.btn-ghost:hover{background:var(--accent-dim);box-shadow:0 0 16px var(--accent-glow)}
+
+/* ============================
+   HEADER
+   ============================ */
+#hdr{
+  position:fixed;top:0;left:0;right:0;z-index:1000;
+  padding:1.1rem 0;
+  transition:background .4s,padding .4s,border-color .4s;
+  border-bottom:1px solid transparent;
+}
+#hdr.scrolled{
+  background:rgba(11,12,16,.9);
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  border-color:var(--border);padding:.75rem 0;
+}
+.hdr-in{display:flex;align-items:center;justify-content:space-between;gap:1.5rem}
+.logo{
+  font-size:1.4rem;font-weight:900;letter-spacing:.12em;
+  color:var(--white);flex-shrink:0;
+}
+.logo span{color:var(--accent)}
+nav ul{display:flex;gap:2.5rem;list-style:none}
+nav ul a{
+  font-size:.88rem;font-weight:500;color:var(--slate);
+  letter-spacing:.03em;transition:color var(--tr);position:relative;
+}
+nav ul a::after{
+  content:'';position:absolute;bottom:-3px;left:0;right:100%;
+  height:1px;background:var(--accent);transition:right var(--tr);
+}
+nav ul a:hover{color:var(--white)}
+nav ul a:hover::after{right:0}
+
+/* burger */
+.burger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:4px;background:none;border:none}
+.burger span{display:block;width:24px;height:2px;background:var(--white);border-radius:2px;transition:var(--tr)}
+.burger.open span:nth-child(1){transform:rotate(45deg) translate(5px,5px)}
+.burger.open span:nth-child(2){opacity:0}
+.burger.open span:nth-child(3){transform:rotate(-45deg) translate(5px,-5px)}
+
+/* mobile nav */
+.m-nav{
+  display:none;position:fixed;inset:0;
+  background:rgba(11,12,16,.97);backdrop-filter:blur(20px);
+  z-index:999;flex-direction:column;align-items:center;justify-content:center;gap:2rem;
+}
+.m-nav.open{display:flex}
+.m-nav a{font-size:1.8rem;font-weight:800;color:var(--white);transition:color var(--tr)}
+.m-nav a:hover{color:var(--accent)}
+
+/* ============================
+   HERO
+   ============================ */
+#hero{
+  min-height:100vh;display:flex;align-items:center;
+  position:relative;overflow:hidden;padding:7rem 0 5rem;
+}
+/* сетка-фон */
+.hero-grid{
+  position:absolute;inset:0;
+  background-image:
+    linear-gradient(rgba(0,229,255,.035) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,229,255,.035) 1px,transparent 1px);
+  background-size:60px 60px;
+  pointer-events:none;
+}
+/* вертикальная акцентная полоска */
+.hero-vline{
+  position:absolute;top:0;bottom:0;left:0;width:3px;
+  background:linear-gradient(180deg,transparent,var(--accent),transparent);
+  opacity:.45;pointer-events:none;
+}
+/* canvas сферы */
+#sphereC{
+  position:absolute;right:-6%;top:50%;
+  transform:translateY(-50%);
+  width:min(680px,58vw);height:min(680px,58vw);
+  pointer-events:none;opacity:.9;
+}
+
+.hero-cnt{position:relative;z-index:2;max-width:680px}
+
+/* пульсирующий лейбл */
+.hero-eye{display:flex;align-items:center;gap:.75rem;margin-bottom:1.75rem}
+.hdot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--accent);box-shadow:0 0 12px var(--accent-glow);
+  animation:hpulse 2s ease-in-out infinite;flex-shrink:0;
+}
+@keyframes hpulse{
+  0%,100%{box-shadow:0 0 8px var(--accent-glow)}
+  50%{box-shadow:0 0 22px var(--accent-glow),0 0 40px rgba(0,229,255,.15)}
+}
+.htxt{
+  font-size:.7rem;font-weight:700;
+  letter-spacing:.22em;text-transform:uppercase;color:var(--accent);
+}
+
+.hero-h1{
+  font-size:clamp(2.1rem,4.5vw,4.1rem);font-weight:900;
+  line-height:1.07;letter-spacing:-.03em;margin-bottom:1.4rem;
+}
+.hero-h1 .aw{
+  color:var(--accent);position:relative;display:inline-block;
+}
+.hero-h1 .aw::after{
+  content:'';position:absolute;bottom:-2px;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--accent),var(--accent2));
+  transform:scaleX(0);transform-origin:left;
+  animation:uline 1s 1.2s ease forwards;
+}
+@keyframes uline{to{transform:scaleX(1)}}
+
+.hero-sub{
+  font-size:clamp(.95rem,1.4vw,1.1rem);color:var(--slate);
+  max-width:560px;line-height:1.75;margin-bottom:2.5rem;
+}
+.hero-btns{display:flex;flex-wrap:wrap;gap:1rem}
+
+/* скролл-индикатор */
+.scroll-ind{
+  position:absolute;bottom:2rem;left:50%;transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:.5rem;opacity:.4;
+}
+.scroll-mouse{
+  width:22px;height:34px;border:1.5px solid var(--muted);
+  border-radius:11px;display:flex;justify-content:center;padding-top:5px;
+}
+.scroll-wheel{
+  width:2px;height:6px;background:var(--accent);border-radius:1px;
+  animation:wscroll 1.8s ease-in-out infinite;
+}
+@keyframes wscroll{0%{transform:translateY(0);opacity:1}100%{transform:translateY(8px);opacity:0}}
+.scroll-lbl{font-size:.63rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+
+/* ============================
+   STATS
+   ============================ */
+#stats{padding:5.5rem 0}
+.stats-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  gap:1px;background:var(--border);
+  border:1px solid var(--border);border-radius:var(--rL);overflow:hidden;
+}
+.sc{
+  background:var(--bg-card);padding:2.25rem 1.75rem;
+  position:relative;transition:background var(--tr);
+}
+.sc:hover{background:var(--bg-card2)}
+.sc::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--accent),var(--accent2));
+  opacity:0;transition:opacity var(--tr);
+}
+.sc:hover::before{opacity:1}
+.sn{
+  font-size:clamp(2rem,3.5vw,3rem);font-weight:900;
+  letter-spacing:-.04em;line-height:1;margin-bottom:.45rem;
+}
+.sn .a{color:var(--accent)}
+.sl{font-size:.85rem;color:var(--slate);line-height:1.5}
+.ss{font-size:.7rem;color:var(--muted);margin-top:.4rem;font-style:italic}
+
+/* ============================
+   SERVICES
+   ============================ */
+#services{padding:6.5rem 0}
+.sh{margin-bottom:3rem}
+.srv-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
+.svc{
+  background:var(--bg-card);
+  border:1px solid var(--border);border-radius:var(--rL);
+  padding:2.75rem;position:relative;overflow:hidden;
+  transition:border-color var(--tr),transform var(--tr),box-shadow var(--tr);
+}
+.svc::before{
+  content:'';position:absolute;inset:-1px;border-radius:var(--rL);
+  background:linear-gradient(135deg,transparent 30%,rgba(0,229,255,.35),transparent 70%);
+  opacity:0;transition:opacity var(--tr);pointer-events:none;
+  /* clip to border only */
+  mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+  -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+  mask-composite:exclude;-webkit-mask-composite:xor;padding:1px;
+}
+.svc:hover::before{opacity:1}
+.svc:hover{
+  border-color:rgba(0,229,255,.2);
+  transform:translateY(-6px);
+  box-shadow:0 24px 60px rgba(0,229,255,.07),0 8px 24px rgba(0,0,0,.4);
+}
+.si{
+  width:52px;height:52px;border-radius:14px;
+  background:var(--accent-dim);border:1px solid var(--border-a);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.4rem;margin-bottom:1.5rem;transition:box-shadow var(--tr);
+}
+.svc:hover .si{box-shadow:0 0 20px var(--accent-glow)}
+.st{font-size:1.45rem;font-weight:800;margin-bottom:.9rem;letter-spacing:-.02em}
+.sd{font-size:.93rem;color:var(--slate);line-height:1.75;margin-bottom:1.5rem}
+.sf{list-style:none;display:flex;flex-direction:column;gap:.55rem;margin-bottom:1.75rem}
+.sf li{display:flex;align-items:flex-start;gap:.7rem;font-size:.87rem;color:var(--slate)}
+.sf li::before{
+  content:'';display:block;width:5px;height:5px;border-radius:50%;
+  background:var(--accent);margin-top:.42rem;flex-shrink:0;
+}
+
+/* ============================
+   PORTFOLIO
+   ============================ */
+#portfolio{padding:6.5rem 0}
+.ph{margin-bottom:3rem}
+.viewer{
+  border-radius:var(--rL);overflow:hidden;
+  border:1px solid var(--border);background:var(--bg-card);margin-bottom:2.5rem;
+}
+.viewer-in{
+  aspect-ratio:16/7;
+  background:radial-gradient(ellipse 55% 60% at 30% 55%,rgba(0,102,255,.1) 0%,transparent 65%),
+    radial-gradient(ellipse 40% 40% at 73% 50%,rgba(0,229,255,.07) 0%,transparent 60%),
+    #0d0e14;
+  display:flex;align-items:center;justify-content:center;
+  position:relative;overflow:hidden;
+}
+/* кольца */
+.vring{
+  position:absolute;border-radius:50%;
+  border:1px solid rgba(0,229,255,.06);
+  animation:vr 4s ease-out infinite;
+}
+.vring:nth-child(1){width:180px;height:90px;animation-delay:0s}
+.vring:nth-child(2){width:380px;height:165px;animation-delay:.8s}
+.vring:nth-child(3){width:620px;height:265px;animation-delay:1.6s}
+.vring:nth-child(4){width:880px;height:370px;animation-delay:2.4s}
+@keyframes vr{
+  0%{opacity:0;transform:scaleX(.35) scaleY(.7)}
+  30%{opacity:1}
+  100%{opacity:0;transform:scaleX(1.05) scaleY(1.1)}
+}
+/* сканирование */
+.vscan{
+  position:absolute;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,rgba(0,229,255,.55),transparent);
+  animation:vscanA 4s ease-in-out infinite;
+}
+@keyframes vscanA{
+  0%{top:8%;opacity:0}20%{opacity:1}80%{opacity:1}100%{top:90%;opacity:0}
+}
+/* хотспоты */
+.vhs{
+  position:absolute;width:13px;height:13px;border-radius:50%;
+  background:var(--accent);cursor:pointer;
+  animation:vhsP 2.5s ease-in-out infinite;
+}
+.vhs:nth-child(1){top:40%;left:28%;animation-delay:0s}
+.vhs:nth-child(2){top:55%;left:61%;animation-delay:.9s}
+.vhs:nth-child(3){top:33%;left:73%;animation-delay:1.7s}
+@keyframes vhsP{
+  0%,100%{box-shadow:0 0 0 0 rgba(0,229,255,.6);transform:scale(1)}
+  50%{box-shadow:0 0 0 9px rgba(0,229,255,0);transform:scale(1.2)}
+}
+.vhs-r{
+  position:absolute;inset:-5px;border-radius:50%;
+  border:1px solid rgba(0,229,255,.35);
+  animation:vhsR 2.5s ease-in-out infinite;
+}
+@keyframes vhsR{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.8);opacity:0}}
+.v360{
+  position:absolute;bottom:1.3rem;right:1.75rem;
+  font-size:.65rem;font-weight:800;letter-spacing:.15em;
+  color:var(--accent);opacity:.65;
+}
+/* кнопка запуска */
+.vplay-wrap{
+  position:relative;z-index:10;
+  display:flex;flex-direction:column;align-items:center;gap:1rem;
+}
+.vplay{
+  width:78px;height:78px;border-radius:50%;
+  background:rgba(0,229,255,.1);border:1.5px solid var(--accent);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:background var(--tr),box-shadow var(--tr),transform var(--tr);
+}
+.vplay:hover{
+  background:rgba(0,229,255,.2);
+  box-shadow:0 0 40px var(--accent-glow);transform:scale(1.08);
+}
+.vplay svg{width:26px;height:26px;fill:var(--accent)}
+.vlbl{font-size:.78rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+
+/* кейсы */
+.case-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
+.cc{
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:var(--r);padding:2rem;
+  transition:border-color var(--tr),transform var(--tr);
+}
+.cc:hover{border-color:var(--border-a);transform:translateY(-4px)}
+.ctag{
+  display:inline-block;font-size:.67rem;font-weight:700;
+  letter-spacing:.15em;text-transform:uppercase;color:var(--accent);
+  background:var(--accent-dim);border:1px solid var(--border-a);
+  padding:.22rem .7rem;border-radius:4px;margin-bottom:.9rem;
+}
+.ctitle{font-size:1.1rem;font-weight:800;margin-bottom:.65rem;line-height:1.3}
+.cdesc{font-size:.88rem;color:var(--slate);line-height:1.7}
+
+/* ============================
+   ADVANTAGES
+   ============================ */
+#adv{padding:6.5rem 0}
+.av-hdr{margin-bottom:3rem}
+.av-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1.25rem}
+.ac{
+  padding:1.75rem 1.5rem;border:1px solid var(--border);
+  border-radius:var(--r);background:var(--bg-card);
+  transition:border-color var(--tr),box-shadow var(--tr),transform var(--tr);
+}
+.ac:hover{
+  border-color:var(--border-a);
+  box-shadow:0 0 22px rgba(0,229,255,.07);
+  transform:translateY(-4px);
+}
+.ai{font-size:1.7rem;margin-bottom:.85rem;display:block}
+.at{font-size:.9rem;font-weight:700;margin-bottom:.4rem}
+.ad{font-size:.8rem;color:var(--slate);line-height:1.65}
+
+/* ============================
+   CONTACT
+   ============================ */
+#contact{padding:7.5rem 0;position:relative}
+.cglow{
+  position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  width:800px;height:400px;pointer-events:none;
+  background:radial-gradient(ellipse,rgba(0,229,255,.035) 0%,transparent 70%);
+}
+.cg{display:grid;grid-template-columns:1fr 1.15fr;gap:5rem;align-items:center}
+.ci .h2{margin-bottom:1rem}
+.cmeta{margin-top:2rem;display:flex;flex-direction:column;gap:.85rem}
+.cmi{display:flex;align-items:center;gap:.7rem;font-size:.87rem;color:var(--slate)}
+.cmi-ic{
+  width:30px;height:30px;border-radius:8px;
+  background:var(--accent-dim);border:1px solid var(--border-a);
+  display:flex;align-items:center;justify-content:center;
+  font-size:.95rem;flex-shrink:0;
+}
+.form-card{
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:var(--rL);padding:2.25rem;
+}
+.ftitle{font-size:1.2rem;font-weight:800;margin-bottom:.35rem}
+.fsub{font-size:.86rem;color:var(--slate);margin-bottom:1.75rem}
+.fg{margin-bottom:1.1rem}
+.flbl{
+  display:block;font-size:.73rem;font-weight:700;
+  letter-spacing:.06em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:.45rem;
+}
+.fc{
+  width:100%;padding:.825rem 1rem;
+  background:rgba(255,255,255,.04);
+  border:1px solid var(--border);border-radius:var(--r);
+  color:var(--white);font-size:.93rem;
+  outline:none;font-family:inherit;
+  transition:border-color var(--tr),box-shadow var(--tr),background var(--tr);
+  -webkit-appearance:none;appearance:none;
+}
+.fc::placeholder{color:var(--muted)}
+.fc:focus{
+  border-color:var(--accent);
+  background:rgba(0,229,255,.04);
+  box-shadow:0 0 0 3px rgba(0,229,255,.1);
+}
+.fsel-w{position:relative}
+.fsel-w::after{
+  content:'';position:absolute;right:1rem;top:50%;transform:translateY(-50%);
+  width:0;height:0;border-left:4px solid transparent;
+  border-right:4px solid transparent;border-top:5px solid var(--muted);
+  pointer-events:none;
+}
+.fc option{background:#1a1d25;color:var(--white)}
+.fsub-btn{width:100%;margin-top:.5rem;padding:.95rem;font-size:.95rem}
+.fpriv{font-size:.72rem;color:var(--muted);text-align:center;margin-top:.85rem;line-height:1.6}
+
+/* ============================
+   FOOTER
+   ============================ */
+footer{border-top:1px solid var(--border);padding:2.5rem 0}
+.fi{display:flex;align-items:center;justify-content:space-between;gap:1.5rem;flex-wrap:wrap}
+.fc2{font-size:.8rem;color:var(--muted)}
+.fl{display:flex;gap:2rem;list-style:none}
+.fl a{font-size:.8rem;color:var(--muted);transition:color var(--tr)}
+.fl a:hover{color:var(--accent)}
+
+/* ============================
+   RESPONSIVE
+   ============================ */
+@media(max-width:1100px){
+  .av-grid{grid-template-columns:repeat(2,1fr)}
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:900px){
+  .srv-grid,.case-grid{grid-template-columns:1fr}
+  .cg{grid-template-columns:1fr;gap:3rem}
+  nav{display:none}
+  .burger{display:flex}
+  #sphereC{width:min(420px,70vw);height:min(420px,70vw);opacity:.4}
+}
+@media(max-width:640px){
+  .wrap{padding:0 1.25rem}
+  .stats-grid{grid-template-columns:1fr 1fr}
+  .av-grid{grid-template-columns:1fr 1fr}
+  .hero-btns{flex-direction:column}
+  .hero-btns .btn{width:100%;justify-content:center}
+  .fi{flex-direction:column;text-align:center}
+  #sphereC{display:none}
+}
+@media(max-width:420px){
+  .av-grid{grid-template-columns:1fr}
+  .stats-grid{grid-template-columns:1fr}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
+</style>
+</head>
+<body>
+
+<!-- ========== HEADER ========== -->
+<header id="hdr">
+  <div class="wrap">
+    <div class="hdr-in">
+      <a href="#hero" class="logo">SFERA<span>.</span></a>
+      <nav>
+        <ul>
+          <li><a href="#services">Услуги</a></li>
+          <li><a href="#portfolio">Портфолио</a></li>
+          <li><a href="#adv">Преимущества</a></li>
+          <li><a href="#contact">Контакты</a></li>
+        </ul>
+      </nav>
+      <a href="#contact" class="btn btn-ghost" style="white-space:nowrap">Рассчитать стоимость</a>
+      <button class="burger" id="burg" aria-label="Меню">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- мобильное меню -->
+<div class="m-nav" id="mnav" aria-hidden="true">
+  <a href="#services" class="mlink">Услуги</a>
+  <a href="#portfolio" class="mlink">Портфолио</a>
+  <a href="#adv" class="mlink">Преимущества</a>
+  <a href="#contact" class="mlink">Контакты</a>
+  <a href="#contact" class="btn btn-primary mlink" style="margin-top:.5rem">Рассчитать стоимость</a>
+</div>
+
+<!-- ========== HERO ========== -->
+<section id="hero">
+  <div class="hero-grid" aria-hidden="true"></div>
+  <div class="hero-vline" aria-hidden="true"></div>
+  <canvas id="sphereC" aria-hidden="true"></canvas>
+
+  <div class="wrap">
+    <div class="hero-cnt">
+      <div class="hero-eye">
+        <div class="hdot"></div>
+        <span class="htxt">Виртуальные туры &amp; Промышленная съёмка</span>
+      </div>
+      <h1 class="hero-h1">
+        Сверхчёткие виртуальные туры <span class="aw">360°</span><br>
+        и индустриальная фотография<br>для вашего бизнеса.
+      </h1>
+      <p class="hero-sub">
+        Создаём технологичные интерактивные экскурсии и премиальный визуальный контент для крупных промышленных предприятий и ведущих учебных заведений.
+      </p>
+      <div class="hero-btns">
+        <a href="#portfolio" class="btn btn-primary">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+          Смотреть 3D-туры
+        </a>
+        <a href="#contact" class="btn btn-outline">Обсудить проект →</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="scroll-ind" aria-hidden="true">
+    <div class="scroll-mouse"><div class="scroll-wheel"></div></div>
+    <span class="scroll-lbl">Прокрутите</span>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ========== STATS ========== -->
+<section id="stats">
+  <div class="wrap">
+    <div class="stats-grid">
+      <div class="sc">
+        <div class="sn"><span class="cnt a" data-t="80">0</span><span class="a">+</span></div>
+        <div class="sl">Реализованных проектов по всей России</div>
+        <div class="ss">Заводы, фабрики, учебные заведения</div>
+      </div>
+      <div class="sc">
+        <div class="sn"><span class="a">100</span><span style="font-size:1.4rem;color:var(--slate)">%</span></div>
+        <div class="sl">Соответствие ТЗ и требованиям ГОСТ</div>
+        <div class="ss">Строгий контроль качества каждого этапа</div>
+      </div>
+      <div class="sc">
+        <div class="sn">До <span class="cnt a" data-t="16">0</span><span style="font-size:1.3rem;color:var(--slate)">K</span></div>
+        <div class="sl">Разрешение панорамных снимков</div>
+        <div class="ss">Профессиональная оптика, калиброванное оборудование</div>
+      </div>
+      <div class="sc">
+        <div class="sn"><span class="a">B2B</span></div>
+        <div class="sl">Работа только по договору</div>
+        <div class="ss">Безналичный расчёт, закрывающие документы, НДС</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ========== SERVICES ========== -->
+<section id="services">
+  <div class="wrap">
+    <div class="sh">
+      <span class="lbl">Что мы делаем</span>
+      <h2 class="h2">Два флагманских направления.</h2>
+      <p class="desc">Полный цикл от съёмки до финальной сдачи. Готовый продукт под ключ — без субподрядчиков.</p>
+    </div>
+    <div class="srv-grid">
+      <div class="svc" data-tilt>
+        <div class="si">🌐</div>
+        <div class="st">Виртуальные туры 360°</div>
+        <p class="sd">Технологичные VR-экскурсии, которые позволяют партнёрам, инвесторам и абитуриентам буквально «войти» на вашу территорию — с любого устройства.</p>
+        <ul class="sf">
+          <li>Дни открытых дверей для колледжей и вузов</li>
+          <li>Презентация мощностей для инвесторов и заказчиков</li>
+          <li>Промышленные экскурсии по заводам и фабрикам</li>
+          <li>Встраивание на сайт, в Яндекс.Карты и Google Maps</li>
+          <li>Горячие точки, аудиогид и навигационная карта</li>
+        </ul>
+        <a href="#contact" class="btn btn-ghost">Заказать тур →</a>
+      </div>
+      <div class="svc" data-tilt>
+        <div class="si">📷</div>
+        <div class="st">Промышленная &amp; репортажная съёмка</div>
+        <p class="sd">Имиджевый визуальный контент для сайтов, тендерных досье, годовых отчётов и корпоративных презентаций.</p>
+        <ul class="sf">
+          <li>Съёмка оборудования и производственных процессов</li>
+          <li>Репортаж с крупных корпоративных мероприятий</li>
+          <li>Контент для буклетов, тендерных досье и сайтов</li>
+          <li>Аэрофотосъёмка объектов и территорий (сертифицировано)</li>
+          <li>Постобработка в фирменном техническом стиле</li>
+        </ul>
+        <a href="#contact" class="btn btn-ghost">Заказать съёмку →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ========== PORTFOLIO ========== -->
+<section id="portfolio">
+  <div class="wrap">
+    <div class="ph">
+      <span class="lbl">Наши работы</span>
+      <h2 class="h2">Встроенный 3D-шоурум.</h2>
+      <p class="desc">Нажмите воспроизведение, чтобы запустить пример интерактивного тура, или ознакомьтесь с кейсами ниже.</p>
+    </div>
+
+    <div class="viewer">
+      <div class="viewer-in">
+        <!-- визуальные эффекты -->
+        <div class="vring"></div>
+        <div class="vring"></div>
+        <div class="vring"></div>
+        <div class="vring"></div>
+        <div class="vscan"></div>
+        <div class="vhs"><div class="vhs-r"></div></div>
+        <div class="vhs"><div class="vhs-r"></div></div>
+        <div class="vhs"><div class="vhs-r"></div></div>
+        <span class="v360">360°</span>
+        <!-- кнопка запуска -->
+        <div class="vplay-wrap" id="vplayWrap">
+          <div class="vplay" role="button" tabindex="0" aria-label="Запустить тур" onclick="document.getElementById('vplayWrap').style.display='none'">
+            <svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
+          </div>
+          <div class="vlbl">Запустить интерактивный тур</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="case-grid">
+      <div class="cc">
+        <div class="ctag">Промышленность</div>
+        <div class="ctitle">Виртуальный тур по производственному предприятию</div>
+        <p class="cdesc">Панорамная съёмка всех цехов крупного машиностроительного завода. Интерактивная карта, горячие точки с описанием оборудования, аудиогид. Используется для презентации мощностей государственным заказчикам и инвесторам.</p>
+      </div>
+      <div class="cc">
+        <div class="ctag">Образование</div>
+        <div class="ctitle">Интерактивная 3D-экскурсия по учебному заведению</div>
+        <p class="cdesc">360°-тур по корпусам и лабораториям среднего профессионального колледжа. Встроен на официальный сайт в раздел «Абитуриентам». Позволяет будущим студентам ознакомиться с обстановкой до личного визита.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ========== ADVANTAGES ========== -->
+<section id="adv">
+  <div class="wrap">
+    <div class="av-hdr">
+      <span class="lbl">Технологическое превосходство</span>
+      <h2 class="h2">Почему выбирают нас.</h2>
+    </div>
+    <div class="av-grid">
+      <div class="ac">
+        <span class="ai">🎯</span>
+        <div class="at">Ultra HD / HDR-съёмка</div>
+        <p class="ad">Панорамы до 16K и фото в HDR — детализация, которая впечатляет на любом экране.</p>
+      </div>
+      <div class="ac">
+        <span class="ai">🔬</span>
+        <div class="at">Калиброванное оборудование</div>
+        <p class="ad">Профессиональные камеры с панорамными головками. Ноль геометрических искажений.</p>
+      </div>
+      <div class="ac">
+        <span class="ai">🔗</span>
+        <div class="at">Идеальная склейка без швов</div>
+        <p class="ad">Ручная ретушь каждого стыка в PTGui. Туры без единого видимого шва.</p>
+      </div>
+      <div class="ac">
+        <span class="ai">📋</span>
+        <div class="at">Строгое соблюдение дедлайнов</div>
+        <p class="ad">Срок сдачи фиксируется в договоре. Поэтапная приёмка оформляется актами.</p>
+      </div>
+      <div class="ac">
+        <span class="ai">📝</span>
+        <div class="at">Официальный договор</div>
+        <p class="ad">Безналичный расчёт, счёт-фактура, закрывающие акты. ИП и ООО.</p>
+      </div>
+      <div class="ac">
+        <span class="ai">🏭</span>
+        <div class="at">Опыт на режимных объектах</div>
+        <p class="ad">Съёмка на промышленных предприятиях с соблюдением требований безопасности и NDA.</p>
+      </div>
+      <div class="ac">
+        <span class="ai">🌐</span>
+        <div class="at">Мультиплатформенная интеграция</div>
+        <p class="ad">Встраивание на сайт, в Яндекс.Карты, Google Maps, ВКонтакте и любую CMS.</p>
+      </div>
+      <div class="ac">
+        <span class="ai">🎓</span>
+        <div class="at">Специализация: образование</div>
+        <p class="ad">Реализованы десятки туров для колледжей и вузов. Знаем специфику приёмных кампаний.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ========== CONTACT ========== -->
+<section id="contact">
+  <div class="cglow" aria-hidden="true"></div>
+  <div class="wrap">
+    <div class="cg">
+      <div class="ci">
+        <span class="lbl">Начать проект</span>
+        <h2 class="h2">Рассчитайте стоимость вашего проекта.</h2>
+        <p class="desc">Оставьте заявку — мы свяжемся в течение 2 часов и подготовим коммерческое предложение под вашу задачу.</p>
+        <div class="cmeta">
+          <div class="cmi"><div class="cmi-ic">📱</div><span>Telegram: <a href="https://t.me/sfera360" style="color:var(--accent)">@sfera360</a></span></div>
+          <div class="cmi"><div class="cmi-ic">📍</div><span>Работаем по всей России, выезд включён</span></div>
+          <div class="cmi"><div class="cmi-ic">⚡</div><span>Ответ в течение 2 рабочих часов</span></div>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <div class="ftitle">Заявка на проект</div>
+        <div class="fsub">Заполните форму — это займёт 30 секунд.</div>
+        <div id="cform">
+          <div class="fg">
+            <label class="flbl" for="fn">Ваше имя</label>
+            <input class="fc" type="text" id="fn" placeholder="Иван Иванов" autocomplete="name">
+          </div>
+          <div class="fg">
+            <label class="flbl" for="fc_">Telegram / Телефон</label>
+            <input class="fc" type="text" id="fc_" placeholder="+7 900 000-00-00 или @username" autocomplete="tel">
+          </div>
+          <div class="fg">
+            <label class="flbl" for="ft">Тип проекта</label>
+            <div class="fsel-w">
+              <select class="fc" id="ft">
+                <option value="" disabled selected>Выберите тип проекта</option>
+                <option>Виртуальный тур 360°</option>
+                <option>Промышленная фотосъёмка</option>
+                <option>Комплексный проект</option>
+              </select>
+            </div>
+          </div>
+          <div class="fg">
+            <label class="flbl" for="fcom">Краткое описание (необязательно)</label>
+            <textarea class="fc" id="fcom" rows="3" placeholder="Завод, учебное заведение, масштаб…" style="resize:vertical;min-height:76px"></textarea>
+          </div>
+          <button class="btn btn-primary fsub-btn" onclick="doSubmit(this)">Отправить заявку →</button>
+          <div class="fpriv">Нажимая кнопку, вы соглашаетесь с политикой конфиденциальности. Данные не передаются третьим лицам.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== FOOTER ========== -->
+<footer>
+  <div class="wrap">
+    <div class="fi">
+      <div class="fc2">© 2025 SFERA. Виртуальные туры 360° и промышленная фотография.</div>
+      <ul class="fl">
+        <li><a href="#services">Услуги</a></li>
+        <li><a href="#portfolio">Портфолио</a></li>
+        <li><a href="#contact">Контакты</a></li>
+      </ul>
+    </div>
+  </div>
+</footer>
+
+<!-- ========== JS ========== -->
+<script>
+/* -------------------------------------------------------
+   HEADER: эффект при скролле
+------------------------------------------------------- */
+const hdr = document.getElementById('hdr');
+window.addEventListener('scroll', () => {
+  hdr.classList.toggle('scrolled', window.scrollY > 55);
+}, {passive: true});
+
+/* -------------------------------------------------------
+   БУРГЕР-МЕНЮ
+------------------------------------------------------- */
+const burg  = document.getElementById('burg');
+const mnav  = document.getElementById('mnav');
+
+burg.addEventListener('click', () => {
+  const open = mnav.classList.toggle('open');
+  burg.classList.toggle('open', open);
+  mnav.setAttribute('aria-hidden', !open);
+  document.body.style.overflow = open ? 'hidden' : '';
+});
+
+document.querySelectorAll('.mlink').forEach(l => {
+  l.addEventListener('click', () => {
+    mnav.classList.remove('open');
+    burg.classList.remove('open');
+    mnav.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  });
+});
+
+/* -------------------------------------------------------
+   CANVAS: WIREFRAME-СФЕРА (интерактивная, мышь)
+------------------------------------------------------- */
+(function() {
+  const canvas = document.getElementById('sphereC');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let W, H, raf;
+  let mxOff = 0, myOff = 0;
+  let angle  = 0;
+
+  /* Точки на сфере по золотому углу */
+  const N  = 200;
+  const pts = [];
+  for (let i = 0; i < N; i++) {
+    const th = Math.acos(1 - 2*(i+.5)/N);
+    const ph = Math.PI * (1 + Math.sqrt(5)) * i;
+    pts.push([th, ph]);
+  }
+
+  function resize() {
+    const rect = canvas.getBoundingClientRect();
+    W = canvas.width  = rect.width  || 600;
+    H = canvas.height = rect.height || 600;
+  }
+  resize();
+
+  const ro = new ResizeObserver(resize);
+  ro.observe(canvas);
+
+  /* отслеживаем мышь по всему документу */
+  document.addEventListener('mousemove', e => {
+    mxOff = (e.clientX / window.innerWidth  - .5) * .35;
+    myOff = (e.clientY / window.innerHeight - .5) * .35;
+  });
+
+  /* Вращение 3D-точки вокруг X и Y */
+  function rot(x, y, z, rx, ry) {
+    let y2 =  y*Math.cos(rx) - z*Math.sin(rx);
+    let z2 =  y*Math.sin(rx) + z*Math.cos(rx);
+    let x3 =  x*Math.cos(ry) + z2*Math.sin(ry);
+    let z3 = -x*Math.sin(ry) + z2*Math.cos(ry);
+    return [x3, y2, z3];
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    angle += .003;
+
+    const cx = W/2, cy = H/2;
+    const r  = Math.min(W, H) * .42;
+    const ry = angle + mxOff;
+    const rx = .28  + myOff;
+
+    /* параллели */
+    for (let p = 1; p < 8; p++) {
+      const lat = p / 8 * Math.PI;
+      ctx.beginPath();
+      let mv = true;
+      for (let s = 0; s <= 64; s++) {
+        const lng = s/64 * Math.PI*2;
+        const [px,py,pz] = rot(
+          Math.sin(lat)*Math.cos(lng),
+          Math.cos(lat),
+          Math.sin(lat)*Math.sin(lng),
+          rx, ry
+        );
+        const sx = cx + px*r, sy = cy - py*r;
+        const al = (pz+1)*.22 + .03;
+        ctx.strokeStyle = `rgba(0,229,255,${al})`;
+        ctx.lineWidth   = .6;
+        if (mv) { ctx.moveTo(sx,sy); mv = false; } else ctx.lineTo(sx,sy);
+      }
+      ctx.closePath(); ctx.stroke();
+    }
+
+    /* меридианы */
+    for (let m = 0; m < 14; m++) {
+      const lng = m/14 * Math.PI*2;
+      ctx.beginPath();
+      let mv = true;
+      for (let s = 0; s <= 44; s++) {
+        const lat = s/44 * Math.PI;
+        const [px,py,pz] = rot(
+          Math.sin(lat)*Math.cos(lng),
+          Math.cos(lat),
+          Math.sin(lat)*Math.sin(lng),
+          rx, ry
+        );
+        const sx = cx+px*r, sy = cy-py*r;
+        const al = (pz+1)*.18 + .03;
+        ctx.strokeStyle = `rgba(0,229,255,${al})`;
+        ctx.lineWidth   = .5;
+        if (mv) { ctx.moveTo(sx,sy); mv = false; } else ctx.lineTo(sx,sy);
+      }
+      ctx.stroke();
+    }
+
+    /* точки */
+    pts.forEach(([th, ph]) => {
+      const la = ph + angle + mxOff;
+      const [px,py,pz] = rot(
+        Math.sin(th)*Math.cos(la),
+        Math.cos(th),
+        Math.sin(th)*Math.sin(la),
+        rx, 0
+      );
+      const al  = (pz+1)*.55;
+      const rad = (pz+1)*1.4 + .4;
+      ctx.beginPath();
+      ctx.arc(cx+px*r, cy-py*r, rad, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(0,229,255,${al})`;
+      ctx.fill();
+    });
+
+    /* экватор — акцентная линия */
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    let mv = true;
+    for (let s = 0; s <= 80; s++) {
+      const lng = s/80 * Math.PI*2;
+      const [px,py,pz] = rot(Math.cos(lng), 0, Math.sin(lng), rx, ry);
+      const sx = cx+px*r, sy = cy-py*r;
+      const al = (pz+1)*.4+.06;
+      ctx.strokeStyle = `rgba(0,229,255,${al})`;
+      if (mv) { ctx.moveTo(sx,sy); mv=false; } else ctx.lineTo(sx,sy);
+    }
+    ctx.stroke();
+
+    raf = requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+/* -------------------------------------------------------
+   СЧЁТЧИКИ (пересекаются с viewport — IntersectionObserver)
+------------------------------------------------------- */
+const counters = document.querySelectorAll('.cnt');
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (!e.isIntersecting) return;
+    io.unobserve(e.target);
+    const el     = e.target;
+    const target = +el.dataset.t;
+    const dur    = 1800;
+    const start  = performance.now();
+    (function tick(now) {
+      const pct = Math.min((now - start) / dur, 1);
+      /* ease-out cubic */
+      const ease = 1 - Math.pow(1 - pct, 3);
+      el.textContent = Math.round(ease * target);
+      if (pct < 1) requestAnimationFrame(tick);
+    })(start);
+  });
+}, {threshold: .3});
+counters.forEach(c => io.observe(c));
+
+/* -------------------------------------------------------
+   TILT-ЭФФЕКТ ДЛЯ КАРТОЧЕК УСЛУГ
+------------------------------------------------------- */
+document.querySelectorAll('[data-tilt]').forEach(card => {
+  card.addEventListener('mousemove', e => {
+    const {left,top,width,height} = card.getBoundingClientRect();
+    const x = (e.clientX - left) / width  - .5;
+    const y = (e.clientY - top)  / height - .5;
+    card.style.transform =
+      `perspective(900px) rotateX(${-y*7}deg) rotateY(${x*7}deg) translateY(-6px)`;
+  });
+  card.addEventListener('mouseleave', () => {
+    card.style.transform = 'perspective(900px) rotateX(0) rotateY(0) translateY(0)';
+  });
+});
+
+/* -------------------------------------------------------
+   SCROLL-АНИМАЦИИ (IntersectionObserver — без GSAP CDN)
+   Используем IO для fade-up, чтобы не зависеть от CDN
+------------------------------------------------------- */
+const style = document.createElement('style');
+style.textContent = `
+  .fade-up{opacity:0;transform:translateY(36px);
+           transition:opacity .65s ease,transform .65s ease}
+  .fade-up.visible{opacity:1;transform:translateY(0)}
+`;
+document.head.appendChild(style);
+
+/* Применяем к блокам */
+const fadeEls = [
+  ...document.querySelectorAll('.sc,.svc,.cc,.ac,.case-grid,.av-grid')
+];
+/* Для секционных заголовков — по одному */
+document.querySelectorAll('.sh,.ph,.av-hdr,.ci,.form-card,.viewer').forEach(el => {
+  fadeEls.push(el);
+});
+
+fadeEls.forEach(el => el.classList.add('fade-up'));
+
+const fadeIO = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('visible');
+      fadeIO.unobserve(e.target);
+    }
+  });
+}, {threshold: .12});
+
+fadeEls.forEach(el => fadeIO.observe(el));
+
+/* stagger для дочерних карточек внутри гридов */
+document.querySelectorAll('.stats-grid,.srv-grid,.case-grid,.av-grid').forEach(grid => {
+  const children = [...grid.children];
+  children.forEach((child, i) => {
+    child.style.transitionDelay = `${i * 0.09}s`;
+  });
+});
+
+/* -------------------------------------------------------
+   ФОРМА: ОБРАБОТКА
+------------------------------------------------------- */
+function doSubmit(btn) {
+  const name = document.getElementById('fn').value.trim();
+  const cont = document.getElementById('fc_').value.trim();
+  const type = document.getElementById('ft').value;
+
+  /* Простая валидация */
+  let ok = true;
+  [[document.getElementById('fn'), name],
+   [document.getElementById('fc_'), cont],
+   [document.getElementById('ft'), type]].forEach(([el, val]) => {
+    if (!val) {
+      el.style.borderColor = '#ff4d6d';
+      el.style.boxShadow   = '0 0 0 3px rgba(255,77,109,.15)';
+      el.addEventListener('input', () => {
+        el.style.borderColor = '';
+        el.style.boxShadow   = '';
+      }, {once:true});
+      ok = false;
+    }
+  });
+  if (!ok) return;
+
+  btn.textContent = 'Отправляем…';
+  btn.disabled    = true;
+
+  setTimeout(() => {
+    document.getElementById('cform').innerHTML = `
+      <div style="text-align:center;padding:2.5rem 0">
+        <div style="font-size:3rem;margin-bottom:1rem">✅</div>
+        <div style="font-size:1.2rem;font-weight:800;margin-bottom:.5rem">Заявка принята!</div>
+        <div style="font-size:.9rem;color:var(--slate);line-height:1.7">
+          Свяжемся с вами в течение 2 рабочих часов.<br>
+          Спасибо, что выбрали SFERA!
+        </div>
+      </div>`;
+  }, 1100);
+}
+</script>
+</body>
+</html>
